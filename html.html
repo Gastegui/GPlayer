@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundCloud OAuth Redirect</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .code-box {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      word-break: break-all;
+      margin: 20px 0;
+    }
+    .success {
+      color: #28a745;
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .error {
+      color: #dc3545;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🎵 SoundCloud OAuth Handler</h1>
+  <p>This page handles OAuth redirects for your music player application.</p>
+
+  <div id="status"></div>
+  <div id="code-display"></div>
+
+  <div id="instructions">
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Use this URL as your SoundCloud API redirect URI</li>
+      <li>When users authorize your app, they'll be redirected here</li>
+      <li>The authorization code will be displayed below</li>
+      <li>Copy the code back to your application</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  // Get URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  const error = urlParams.get('error');
+  const state = urlParams.get('state');
+
+  const statusDiv = document.getElementById('status');
+  const codeDisplay = document.getElementById('code-display');
+
+  if (error) {
+    statusDiv.innerHTML = `<div class="error">
+                <strong>Authorization Error:</strong> ${error}
+                <br>Description: ${urlParams.get('error_description') || 'Unknown error'}
+            </div>`;
+  } else if (code) {
+    statusDiv.innerHTML = `<div class="success">
+                <strong>✅ Authorization Successful!</strong>
+                <br>Copy the code below and paste it into your application.
+            </div>`;
+
+    codeDisplay.innerHTML = `
+                <h3>Authorization Code:</h3>
+                <div class="code-box" id="auth-code">${code}</div>
+                <button onclick="copyCode()">📋 Copy Code</button>
+                <button onclick="clearCode()">🗑️ Clear</button>
+                ${state ? `<p><strong>State:</strong> ${state}</p>` : ''}
+            `;
+  } else {
+    statusDiv.innerHTML = `<div class="error">
+                <strong>No authorization code found.</strong>
+                <br>Make sure you're being redirected here from SoundCloud's OAuth flow.
+            </div>`;
+  }
+
+  function copyCode() {
+    const codeText = document.getElementById('auth-code').textContent;
+    navigator.clipboard.writeText(codeText).then(() => {
+      alert('Code copied to clipboard!');
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = codeText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Code copied to clipboard!');
+    });
+  }
+
+  function clearCode() {
+    if (confirm('Clear the authorization code?')) {
+      window.location.href = window.location.pathname;
+    }
+  }
+
+  // Log the full URL for debugging
+  console.log('Current URL:', window.location.href);
+  console.log('URL Parameters:', Object.fromEntries(urlParams));
+</script>
+</body>
+</html>
